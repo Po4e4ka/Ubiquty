@@ -6,7 +6,7 @@
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         xmlns:local="clr-namespace:Ubiquty"
         mc:Ignorable="d"
-        Title="Ubiquity" Height="310" Width="614" MaxWidth="615" MaxHeight="310" MinWidth="615" MinHeight="310">
+        Title="Ubiquity" Height="302" Width="614" MaxWidth="615" MaxHeight="310" MinWidth="615" MinHeight="310">
     <Grid Height="291">
         <Grid.Background>
             <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
@@ -19,9 +19,9 @@
             <ColumnDefinition Width="0*"/>
             <ColumnDefinition Width="0*"/>
         </Grid.ColumnDefinitions>
-        <Button Content="Запрограммировать" HorizontalAlignment="Left" Margin="21,238,0,0" VerticalAlignment="Top" Click="Button_Click" BorderBrush="#FF29BAC1" Height="20" Width="120" Background="#FF84DFE8" Foreground="Black"/>
-        <RadioButton x:Name="radiobutton" Content="Station(на лифт)" HorizontalAlignment="Left" Margin="21,172,0,0" VerticalAlignment="Top" Checked="RadioButton_Checked" Height="15" Width="106"/>
-        <RadioButton Content="AccesPoint(приямок)" HorizontalAlignment="Left" Margin="21,207,0,0" VerticalAlignment="Top" Checked="RadioButton_Checked_1" Height="15" Width="132"/>
+        <Button x:Name="button_prog" Content="Запрограммировать" HorizontalAlignment="Left" Margin="19,206,0,0" VerticalAlignment="Top" Click="Button_Click" BorderBrush="#FF29BAC1" Height="20" Width="120" Background="#FF84DFE8" Foreground="Black"/>
+        <RadioButton Content="Station(на лифт)" HorizontalAlignment="Left" Margin="19,158,0,0" VerticalAlignment="Top" Checked="RadioButton_Checked" Height="15" Width="106"/>
+        <RadioButton x:Name="radiobutton" Content="AccesPoint(приямок)" HorizontalAlignment="Left" Margin="19,185,0,0" VerticalAlignment="Top" Checked="RadioButton_Checked_1" Height="15" Width="132"/>
         <xctk:MaskedTextBox x:Name="textbox2" Mask="&amp;&amp;:&amp;&amp;:&amp;&amp;:&amp;&amp;:&amp;&amp;:&amp;&amp;" Margin="329,238,0,0" CharacterCasing = "Upper" HorizontalAlignment="Left" Width="120" Height="18" VerticalAlignment="Top" />
         <TextBox x:Name="textbox1" HorizontalAlignment="Left" Margin="329,157,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" Text="192.168.2.100" Height="18" LostFocus="textbox1_LostFocus"/>
         <Label x:Name="label1" Content="IP adress AP" HorizontalAlignment="Left" Margin="225,153,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.539,1.334" Height="26" Width="83"/>
@@ -32,6 +32,10 @@
         <Label x:Name="label1_Copy" Content="IP adress ST" HorizontalAlignment="Left" Margin="225,179,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.539,1.334" Height="26" Width="83"/>
         <TextBox x:Name="textbox4" HorizontalAlignment="Left" Margin="329,183,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" Text="192.168.2.101" Height="18"/>
         <CheckBox Content="Автозаполнение" HorizontalAlignment="Left" Margin="470,158,0,0" VerticalAlignment="Top" IsChecked="True" Unchecked="CheckBox_Unchecked" Checked="CheckBox_Checked"/>
+        <Button x:Name="button_fw"  Content="Обновить прошивку" HorizontalAlignment="Left" Margin="19,236,0,0" VerticalAlignment="Top" Click="Button_Click_FW" BorderBrush="#FF29BAC1" Height="20" Width="120" Background="#FF84DFE8" Foreground="Black"/>
+        <Button x:Name="button_ping" Content="Ping" HorizontalAlignment="Left" Margin="470,183,0,0" VerticalAlignment="Top" Click="Button_Click_PING" BorderBrush="#FF29BAC1" Height="20" Width="120" Background="#FF84DFE8" Foreground="Black"/>
+        <Label x:Name="label_ping" Content="Устройство &#xD;&#xA;не обнаружено" Margin="470,215,25,35" Foreground="Red" FontWeight="Bold"/>
+        <Button x:Name="info" Content="INFO" HorizontalAlignment="Left" Margin="559,10,0,0" VerticalAlignment="Top" BorderBrush="#FF29BAC1" Background="#FF84DFE8" Foreground="Black" Click="info_Click"/>
 
     </Grid>
 </Window>

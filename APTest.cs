@@ -1,89 +1,113 @@
-using System.Collections.Generic;
+using System;
+using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading;
-using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
 using NUnit.Framework;
+using Renci;
+using Renci.SshNet;
 
-[TestFixture]
 public class APTest {
-    private IWebDriver driver;
-    public IDictionary<string, object> vars { get; private set; }
+
+    public APTest(string SelfIP, string CamIP, string AP_MAc, string pass, string gateway, string mask)
+    {
+        this.SelfIP = SelfIP;
+        this.CamIP = CamIP;
+        this.AP_MAc = AP_MAc;
+        this.pass = pass;
+        this.gateway = gateway;
+        this.mask = mask;
+        AP = false;
+    }
+    public APTest(string SelfIP, string CamIP, string pass, string gateway, string mask)
+    {
+        this.SelfIP = SelfIP;
+        this.CamIP = CamIP;
+        this.pass = pass;
+        this.gateway = gateway;
+        this.mask = mask;
+        AP = true;
+    }
+    bool AP;
+    string SelfIP;
+    string CamIP; 
+    string AP_MAc;
+    string pass;
+    string gateway;
+    string mask;
+
+    public static string get_mac(string host, string name, string pass)
+    {
+        ScpClient scp = new ScpClient(host, 22, name, pass);
+        scp.Connect();
+        FileInfo file = new FileInfo("C:\\fw\\Mac.txt");
+        scp.Download("/etc/board.info", file);
+        scp.Disconnect();
+        FileStream file_s = file.OpenRead();
+        string data;
+        Regex re = new Regex(@"hwaddr=(\w+)\n");
+        
+        using (StreamReader sr = new StreamReader(file_s))
+        {
+            data = sr.ReadToEnd();
+        }
+        var match = re.Match(data);
+        return match.Groups[1].Value;
+    }
+    public static void fwupdate(string host, string name, string pass)
+    {
+        SshClient ssh = new SshClient(host, 22, name, pass);
+        ScpClient scp = new ScpClient(host, 22, name, pass);
+        scp.Connect();
+        FileInfo file = new FileInfo("C:\\fw\\fwupdate.bin");
+        scp.Upload(file, "/tmp/fwupdate.bin");
+        scp.Disconnect();
+        ssh.Connect();
+        ssh.RunCommand("/sbin/fwupdate -m");
+        ssh.Disconnect();
+        ssh.Dispose();
+    }
+    public void conf_update(string host, string name, string pass)
+    {
+        SshClient ssh = new SshClient(host, 22, name, pass);
+        ScpClient scp = new ScpClient(host, 22, name, pass);
+        string file_reader;
+        if (AP)
+        {
+            // file = new FileInfo("C:\\fw\\AP_conf.cfg");
+            file_reader = File.ReadAllText("C:\\fw\\AP_conf.cfg");
+            file_reader += "netconf.3.ip=" + SelfIP + '\n' + "pwdog.host =" + CamIP;
+            StreamWriter sw = new StreamWriter("C:\\fw\\system.cfg");
+            sw.WriteLine(file_reader);
+            sw.Close();
+        }
+        else
+        {
+            file_reader = File.ReadAllText("C:\\fw\\ST_conf.cfg");
+            file_reader += "netconf.3.ip=" + SelfIP + '\n' + 
+                            "pwdog.host =" + CamIP + '\n' + 
+                            "wpasupplicant.profile.1.network.1.bssid=" + AP_MAc + '\n' + 
+                            "wireless.1.ap=" + AP_MAc;
+            StreamWriter sw = new StreamWriter("C:\\fw\\system.cfg");
+            sw.WriteLine(file_reader);
+            sw.Close();
+        }
+        FileInfo file = new FileInfo("C:\\fw\\system.cfg");
+
+        scp.Connect();
+        scp.Upload(file, "/tmp/system.cfg");
+        scp.Disconnect();
+        ssh.Connect();
+        ssh.RunCommand("cfgmtd -f /tmp/system.cfg -w");
+    try
+    {
+        ssh.RunCommand("/usr/etc/rc.d/rc.softrestart save");
+    }
+    catch
+    {
+    }
+        ssh.Disconnect();
+        ssh.Dispose();
+    }
 
     
-    private IJavaScriptExecutor js;
-    [SetUp]
-    public void SetUp() {
-        driver = new ChromeDriver();
-        js = (IJavaScriptExecutor)driver;
-        vars = new Dictionary<string, object>();
-    }
-    [TearDown]
-    protected void TearDown() {
-        driver.Quit();
-    }
-    [Test]
-  
-  public void AP(string SelfIP, string CamIP, string pass, string gateway, string mask) {
-        
-            driver.Navigate().GoToUrl("https://192.168.1.20/login.cgi?uri=/");
-            System.Windows.MessageBox.Show("Уберите проверку сертификата в хром и нажмите ок", "Пауза",
-                                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information,
-                                    System.Windows.MessageBoxResult.OK, System.Windows.MessageBoxOptions.ServiceNotification);
-            driver.Manage().Window.Size = new System.Drawing.Size(1936, 1056);
-            driver.FindElement(By.Id("username")).SendKeys("ubnt");
-            driver.FindElement(By.Id("password")).SendKeys("ubnt");
-            {
-                var dropdown = driver.FindElement(By.Id("country"));
-                dropdown.FindElement(By.XPath("//option[. = 'Russia']")).Click();
-            }
-            driver.FindElement(By.Id("agreed")).Click();
-            driver.FindElement(By.CssSelector(".submit > input")).Click();
-            driver.FindElement(By.CssSelector("a:nth-child(7) > img")).Click();
-            driver.FindElement(By.Id("admin_passwd_trigger")).Click();
-            driver.FindElement(By.Id("OldPassword")).SendKeys("ubnt");
-            driver.FindElement(By.Id("NewPassword")).SendKeys(pass);
-            driver.FindElement(By.Id("NewPassword2")).SendKeys(pass);
-            driver.FindElement(By.Id("system_change")).Click();
-            driver.FindElement(By.CssSelector("a:nth-child(3) > img")).Click();
-            driver.FindElement(By.Id("wmode")).Click();
-            {
-                var dropdown = driver.FindElement(By.Id("wmode"));
-                dropdown.FindElement(By.XPath("//option[. = 'Access Point']")).Click();
-            }
-            driver.FindElement(By.Id("wmode")).Click();
-            driver.FindElement(By.Id("wds_chkbox")).Click();
-            driver.FindElement(By.Id("hidessid_chk")).Click();
-            driver.FindElement(By.Id("essid")).Click();
-            driver.FindElement(By.Id("essid")).Clear();
-            driver.FindElement(By.Id("essid")).SendKeys("ubnt1");
-            driver.FindElement(By.Id("security")).Click();
-            {
-                var dropdown = driver.FindElement(By.Id("security"));
-                dropdown.FindElement(By.XPath("//option[. = 'WPA2-AES']")).Click();
-            }
-            driver.FindElement(By.Id("wpa_key")).Click();
-            driver.FindElement(By.Id("wpa_key")).SendKeys(pass);
-            driver.FindElement(By.CssSelector(".change > input")).Click();
-            driver.FindElement(By.CssSelector("a:nth-child(4) > img")).Click();
-            Thread.Sleep(1000);
-            driver.FindElement(By.Id("mgmtIpAddr")).Click();
-            driver.FindElement(By.Id("mgmtIpAddr")).Clear();
-            driver.FindElement(By.Id("mgmtIpAddr")).SendKeys(SelfIP);
-            driver.FindElement(By.Id("mgmtIpNetmask")).Click();
-            driver.FindElement(By.Id("mgmtIpNetmask")).Clear();
-            driver.FindElement(By.Id("mgmtIpNetmask")).SendKeys(mask);
-            driver.FindElement(By.Id("mgmtGateway")).Click();
-            driver.FindElement(By.Id("mgmtGateway")).Clear();
-            driver.FindElement(By.Id("mgmtGateway")).SendKeys(gateway);
-            driver.FindElement(By.Id("change")).Click();
-            driver.FindElement(By.CssSelector("a:nth-child(6) > img")).Click();
-            driver.FindElement(By.Id("pwdogStatus")).Click();
-            driver.FindElement(By.Id("pwdogHost")).Click();
-            driver.FindElement(By.Id("pwdogHost")).SendKeys(CamIP);
-            driver.FindElement(By.CssSelector(".change > input")).Click();
-            driver.FindElement(By.Id("apply_button")).Click();
-            Thread.Sleep(10000);
-            driver.Close();
-            TearDown();
-    }
 }
